@@ -46,12 +46,32 @@ jobs:
           dpkg-deb -x "$deb" "$root"
 
           dylib="$root/var/jb/Library/MobileSubstrate/DynamicLibraries/DynamicIslandLSColor16.dylib"
-          plist="$root/var/jb/Library/MobileSubstrate/DynamicLibraries/DynamicIslandLSColor16.plist"
+          filter="$root/var/jb/Library/MobileSubstrate/DynamicLibraries/DynamicIslandLSColor16.plist"
+          prefs="$root/var/jb/Library/PreferenceBundles/DynamicIslandLSColor16Prefs.bundle"
+          entry="$root/var/jb/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16.plist"
 
           test -s "$dylib"
-          test -s "$plist"
+          test -s "$filter"
+          test -s "$prefs/DynamicIslandLSColor16Prefs"
+          test -s "$entry"
+
           xcrun lipo "$dylib" -verify_arch arm64 arm64e
-          plutil -lint "$plist"
+          xcrun lipo "$prefs/DynamicIslandLSColor16Prefs" -verify_arch arm64 arm64e
+          plutil -lint "$filter"
+          plutil -lint "$prefs/Info.plist"
+          plutil -lint "$entry"
+
+          suffixes=('' '@2x' '@3x')
+          sizes=(29 58 87)
+          for i in 0 1 2; do
+            suffix="${suffixes[$i]}"
+            size="${sizes[$i]}"
+            for icon in               "$root/var/jb/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16${suffix}.png"               "$prefs/icon${suffix}.png"; do
+              test -s "$icon"
+              test "$(sips -g pixelWidth "$icon" | awk '/pixelWidth/{print $2}')" = "$size"
+              test "$(sips -g pixelHeight "$icon" | awk '/pixelHeight/{print $2}')" = "$size"
+            done
+          done
 
       - uses: actions/upload-artifact@v4
         with:
@@ -70,5 +90,5 @@ jobs:
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" packages/*.deb --clobber
           else
-            gh release create "$tag" packages/*.deb               --target "$GITHUB_SHA"               --title "Dynamic Island LS Color 16 ${version}"               --notes "Initial rootless iOS 16 test build. Native Dynamic Island keyline and Lock Screen lock/Face ID glyph are forced to purple."
+            gh release create "$tag" packages/*.deb               --target "$GITHUB_SHA"               --title "Dynamic Island LS Color 16 ${version}"               --notes "Adds Settings with an enable switch, native colour picker, GitHub link and custom Dynamic Island icon."
           fi
