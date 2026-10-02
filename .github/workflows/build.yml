@@ -1,0 +1,74 @@
+name: Build rootless DEB
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dynamic-island-ls-color-16-release
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Theos
+        uses: Randomblock1/theos-action@v1
+        with:
+          theos-sdks: https://github.com/theos/sdks
+          theos-sdks-branch: master
+
+      - name: Build rootless package
+        run: |
+          chmod 755 layout/DEBIAN/postinst
+          make clean package FINALPACKAGE=1
+
+      - name: Validate package
+        run: |
+          set -euo pipefail
+          brew install dpkg
+
+          debs=(packages/*.deb)
+          test "${#debs[@]}" -eq 1
+          deb="${debs[0]}"
+
+          test "$(dpkg-deb -f "$deb" Architecture)" = "iphoneos-arm64"
+          test "$(dpkg-deb -f "$deb" Package)" = "com.551.dynamicislandlscolor16"
+
+          root="$RUNNER_TEMP/dilscolor-check"
+          dpkg-deb -x "$deb" "$root"
+
+          dylib="$root/var/jb/Library/MobileSubstrate/DynamicLibraries/DynamicIslandLSColor16.dylib"
+          plist="$root/var/jb/Library/MobileSubstrate/DynamicLibraries/DynamicIslandLSColor16.plist"
+
+          test -s "$dylib"
+          test -s "$plist"
+          xcrun lipo "$dylib" -verify_arch arm64 arm64e
+          plutil -lint "$plist"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DynamicIslandLSColor16-rootless
+          path: packages/*.deb
+          if-no-files-found: error
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^Version: //p' control)"
+          tag="v${version}"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" packages/*.deb --clobber
+          else
+            gh release create "$tag" packages/*.deb               --target "$GITHUB_SHA"               --title "Dynamic Island LS Color 16 ${version}"               --notes "Initial rootless iOS 16 test build. Native Dynamic Island keyline and Lock Screen lock/Face ID glyph are forced to purple."
+          fi
