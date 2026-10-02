@@ -2,18 +2,12 @@
 
 Rootless iOS 16 tweak for native Dynamic Island devices.
 
-## Features
+Changes the colour of:
+- Lock Screen Dynamic Island border
+- Charging Dynamic Island border
+- Do Not Disturb Dynamic Island border
+- Lock Screen lock / Face ID icon
 
-- Changes the native Dynamic Island keyline/border colour.
-- Changes the Lock Screen lock/Face ID glyph to the same colour.
-- Enable/disable switch in Settings.
-- Native colour picker in Settings.
-- Keeps Apple's native Dynamic Island rendering, animations and behaviour.
-- No fake/notched-device Dynamic Island code.
-- Rootless Dopamine support on iOS 16.
+Includes an enable switch, colour picker and GitHub link in Settings.
 
-## Settings
-
-Open **Settings → Dynamic Island LS Color 16** to enable or disable the tweak, choose a colour, or open the GitHub repository.
-
-Default colour: **#AF52DE**.
+Made for iOS 16 rootless / Dopamine.
