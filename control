@@ -1,6 +1,6 @@
 Package: com.551.dynamicislandlscolor16
 Name: Dynamic Island LS Color 16
-Version: 0.2.2
+Version: 0.2.3
 Architecture: iphoneos-arm64
 Description: Changes the Dynamic Island border colour on the Lock Screen, charging and Do Not Disturb popups, and colours the Lock Screen lock / Face ID icon.
 Maintainer: 551

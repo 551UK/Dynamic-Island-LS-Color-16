@@ -48,9 +48,7 @@ jobs:
           theos-sdks-branch: master
 
       - name: Build rootless package
-        run: |
-          chmod 755 layout/DEBIAN/postinst
-          make clean package FINALPACKAGE=1
+        run: make clean package FINALPACKAGE=1
 
       - name: Validate package
         run: |
@@ -63,10 +61,19 @@ jobs:
 
           test "$(dpkg-deb -f "$deb" Architecture)" = "iphoneos-arm64"
           test "$(dpkg-deb -f "$deb" Package)" = "com.551.dynamicislandlscolor16"
-          test "$(dpkg-deb -f "$deb" Version)" = "0.2.2"
+          test "$(dpkg-deb -f "$deb" Version)" = "0.2.3"
 
           root="$RUNNER_TEMP/dilscolor-check"
+          ctrl="$RUNNER_TEMP/dilscolor-control"
           dpkg-deb -x "$deb" "$root"
+          mkdir -p "$ctrl"
+          dpkg-deb -e "$deb" "$ctrl"
+
+          # Never respring from a dpkg maintainer script. Doing so can interrupt
+          # dpkg configuration and cause Sileo's "dpkg interrupted" loop.
+          test ! -e "$ctrl/postinst"
+          test ! -e "$ctrl/prerm"
+          test ! -e "$ctrl/postrm"
 
           dylib="$root/var/jb/Library/MobileSubstrate/DynamicLibraries/DynamicIslandLSColor16.dylib"
           filter="$root/var/jb/Library/MobileSubstrate/DynamicLibraries/DynamicIslandLSColor16.plist"
@@ -112,7 +119,7 @@ jobs:
           if gh release view "$current" >/dev/null 2>&1; then
             gh release upload "$current" packages/*.deb --clobber
           else
-            gh release create "$current" packages/*.deb               --target "$GITHUB_SHA"               --title "Dynamic Island LS Color 16 ${version}"               --notes "Reset Color now restores the stock iOS white colour."
+            gh release create "$current" packages/*.deb               --target "$GITHUB_SHA"               --title "Dynamic Island LS Color 16 ${version}"               --notes "Fixes dpkg interrupted/respring loop by removing the package post-install respring."
           fi
 
           gh release list --limit 100 --json tagName --jq '.[].tagName' | while read -r tag; do
