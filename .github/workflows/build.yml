@@ -63,7 +63,7 @@ jobs:
 
           test "$(dpkg-deb -f "$deb" Architecture)" = "iphoneos-arm64"
           test "$(dpkg-deb -f "$deb" Package)" = "com.551.dynamicislandlscolor16"
-          test "$(dpkg-deb -f "$deb" Version)" = "0.2.1"
+          test "$(dpkg-deb -f "$deb" Version)" = "0.2.2"
 
           root="$RUNNER_TEMP/dilscolor-check"
           dpkg-deb -x "$deb" "$root"
@@ -112,7 +112,7 @@ jobs:
           if gh release view "$current" >/dev/null 2>&1; then
             gh release upload "$current" packages/*.deb --clobber
           else
-            gh release create "$current" packages/*.deb               --target "$GITHUB_SHA"               --title "Dynamic Island LS Color 16 ${version}"               --notes "Fixes the Settings icon and updates the package description."
+            gh release create "$current" packages/*.deb               --target "$GITHUB_SHA"               --title "Dynamic Island LS Color 16 ${version}"               --notes "Reset Color now restores the stock iOS white colour."
           fi
 
           gh release list --limit 100 --json tagName --jq '.[].tagName' | while read -r tag; do

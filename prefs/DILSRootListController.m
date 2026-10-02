@@ -198,7 +198,7 @@ static NSString *DILSStringFromColor(UIColor *color) {
 
 - (void)resetColor {
     CFPreferencesSetAppValue(CFSTR("color"),
-                             (__bridge CFPropertyListRef)@"#AF52DE",
+                             (__bridge CFPropertyListRef)@"#FFFFFF",
                              (__bridge CFStringRef)DILSPrefsDomain);
     [self postPreferencesChanged];
 }
