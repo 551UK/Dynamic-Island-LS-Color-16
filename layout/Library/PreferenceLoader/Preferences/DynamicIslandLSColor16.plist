@@ -4,20 +4,24 @@
 <dict>
     <key>entry</key>
     <dict>
-        <key>bundle</key>
-        <string>DynamicIslandLSColor16Prefs</string>
-        <key>bundlePath</key>
-        <string>/var/jb/Library/PreferenceBundles/DynamicIslandLSColor16Prefs.bundle</string>
         <key>cell</key>
         <string>PSLinkCell</string>
-        <key>detail</key>
-        <string>DILSRootListController</string>
-        <key>icon</key>
-        <string>DynamicIslandLSColor16.png</string>
-        <key>isController</key>
-        <true/>
         <key>label</key>
         <string>Dynamic Island LS Color 16</string>
+        <key>bundle</key>
+        <string>DynamicIslandLSColor16Prefs</string>
+        <key>detail</key>
+        <string>DILSRootListController</string>
+        <key>controller</key>
+        <string>DILSRootListController</string>
+        <key>isController</key>
+        <true/>
+        <key>icon</key>
+        <string>/var/jb/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16.png</string>
+        <key>iconImage</key>
+        <string>/var/jb/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16.png</string>
+        <key>iconImageSystem</key>
+        <string>capsule.fill</string>
     </dict>
 </dict>
 </plist>

@@ -19,6 +19,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Generate Settings icon
+        run: |
+          python3 - <<'PY'
+          import base64
+          from pathlib import Path
+
+          data = base64.b64decode(Path('assets/DynamicIslandLSColor16.png.b64').read_text())
+          targets = [
+              Path('layout/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16.png'),
+              Path('prefs/layout/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16.png'),
+              Path('prefs/Resources/icon.png'),
+          ]
+
+          for target in targets:
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(data)
+          PY
+
+          for icon in             layout/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16.png             prefs/layout/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16.png             prefs/Resources/icon.png; do
+            sips -z 29 29 "$icon" >/dev/null
+          done
+
       - name: Set up Theos
         uses: Randomblock1/theos-action@v1
         with:
@@ -41,6 +63,7 @@ jobs:
 
           test "$(dpkg-deb -f "$deb" Architecture)" = "iphoneos-arm64"
           test "$(dpkg-deb -f "$deb" Package)" = "com.551.dynamicislandlscolor16"
+          test "$(dpkg-deb -f "$deb" Version)" = "0.2.1"
 
           root="$RUNNER_TEMP/dilscolor-check"
           dpkg-deb -x "$deb" "$root"
@@ -49,11 +72,14 @@ jobs:
           filter="$root/var/jb/Library/MobileSubstrate/DynamicLibraries/DynamicIslandLSColor16.plist"
           prefs="$root/var/jb/Library/PreferenceBundles/DynamicIslandLSColor16Prefs.bundle"
           entry="$root/var/jb/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16.plist"
+          settingsIcon="$root/var/jb/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16.png"
 
           test -s "$dylib"
           test -s "$filter"
           test -s "$prefs/DynamicIslandLSColor16Prefs"
+          test -s "$prefs/icon.png"
           test -s "$entry"
+          test -s "$settingsIcon"
 
           xcrun lipo "$dylib" -verify_arch arm64 arm64e
           xcrun lipo "$prefs/DynamicIslandLSColor16Prefs" -verify_arch arm64 arm64e
@@ -61,17 +87,13 @@ jobs:
           plutil -lint "$prefs/Info.plist"
           plutil -lint "$entry"
 
-          suffixes=('' '@2x' '@3x')
-          sizes=(29 58 87)
-          for i in 0 1 2; do
-            suffix="${suffixes[$i]}"
-            size="${sizes[$i]}"
-            for icon in               "$root/var/jb/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16${suffix}.png"               "$prefs/icon${suffix}.png"; do
-              test -s "$icon"
-              test "$(sips -g pixelWidth "$icon" | awk '/pixelWidth/{print $2}')" = "$size"
-              test "$(sips -g pixelHeight "$icon" | awk '/pixelHeight/{print $2}')" = "$size"
-            done
-          done
+          test "$(sips -g pixelWidth "$settingsIcon" | awk '/pixelWidth/{print $2}')" = "29"
+          test "$(sips -g pixelHeight "$settingsIcon" | awk '/pixelHeight/{print $2}')" = "29"
+          test "$(sips -g pixelWidth "$prefs/icon.png" | awk '/pixelWidth/{print $2}')" = "29"
+          test "$(sips -g pixelHeight "$prefs/icon.png" | awk '/pixelHeight/{print $2}')" = "29"
+
+          /usr/libexec/PlistBuddy -c 'Print :entry:icon' "$entry" | grep -Fx '/var/jb/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16.png'
+          /usr/libexec/PlistBuddy -c 'Print :entry:iconImage' "$entry" | grep -Fx '/var/jb/Library/PreferenceLoader/Preferences/DynamicIslandLSColor16.png'
 
       - uses: actions/upload-artifact@v4
         with:
@@ -90,7 +112,7 @@ jobs:
           if gh release view "$current" >/dev/null 2>&1; then
             gh release upload "$current" packages/*.deb --clobber
           else
-            gh release create "$current" packages/*.deb               --target "$GITHUB_SHA"               --title "Dynamic Island LS Color 16 ${version}"               --notes "Latest rootless iOS 16 build."
+            gh release create "$current" packages/*.deb               --target "$GITHUB_SHA"               --title "Dynamic Island LS Color 16 ${version}"               --notes "Fixes the Settings icon and updates the package description."
           fi
 
           gh release list --limit 100 --json tagName --jq '.[].tagName' | while read -r tag; do
