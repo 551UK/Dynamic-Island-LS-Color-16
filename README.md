@@ -1,6 +1,6 @@
 # Dynamic Island LS Color 16
 
-Rootless iOS 16 tweak for native Dynamic Island devices.
+Rootless iOS 16 tweak for native Dynamic Island devices with color picker.
 
 Changes the colour of:
 - Lock Screen Dynamic Island border
