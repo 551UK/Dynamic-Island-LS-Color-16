@@ -79,16 +79,21 @@ jobs:
           path: packages/*.deb
           if-no-files-found: error
 
-      - name: Publish release
+      - name: Publish latest DEB only
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           version="$(sed -n 's/^Version: //p' control)"
-          tag="v${version}"
+          current="v${version}"
 
-          if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" packages/*.deb --clobber
+          if gh release view "$current" >/dev/null 2>&1; then
+            gh release upload "$current" packages/*.deb --clobber
           else
-            gh release create "$tag" packages/*.deb               --target "$GITHUB_SHA"               --title "Dynamic Island LS Color 16 ${version}"               --notes "Adds Settings with an enable switch, native colour picker, GitHub link and custom Dynamic Island icon."
+            gh release create "$current" packages/*.deb               --target "$GITHUB_SHA"               --title "Dynamic Island LS Color 16 ${version}"               --notes "Latest rootless iOS 16 build."
           fi
+
+          gh release list --limit 100 --json tagName --jq '.[].tagName' | while read -r tag; do
+            [ "$tag" = "$current" ] && continue
+            gh release delete "$tag" --cleanup-tag -y
+          done
